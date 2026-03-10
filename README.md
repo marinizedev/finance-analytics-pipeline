@@ -175,5 +175,6 @@ Algumas análises possíveis com os dados gerados:
 
 ## Autora
 
-Marinize Santana
+Marinize Santana → estudante de Análise e Desenvolvimento de Sistemas.
+
 Projeto desenvolvido como prática de **engenharia de dados e análise financeira com Python**.
