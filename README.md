@@ -159,7 +159,9 @@ Algumas análises possíveis com os dados gerados:
 ## Exemplos de resultados
 
 ![Distribuição do Caixa](docs/distribuicao_caixa.png)
+
 ![Evolução do Caixa](docs/evolucao_caixa.png)
+
 ![Projeção Probabilística do Caixa](docs/projecao_probabilistica.png)
 
 ---
