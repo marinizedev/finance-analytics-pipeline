@@ -1,6 +1,6 @@
 # Finance Analytics Pipeline
 
-![Python](https://img.shields.io/badge/python-3.10+-blue)
+![Python](https://img.shields.io/badge/python-3.14+-blue)
 ![Pandas](https://img.shields.io/badge/pandas-data%20analysis-orange)
 ![Monte Carlo](https://img.shields.io/badge/simulation-monte%20carlo-green)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
