@@ -17,6 +17,15 @@ testes e experimentação de cenários.
 
 DEBUG = False
 
+# =========================================================
+# LOGGING
+# =========================================================
+
+LOG_NIVEL = "INFO"
+LOG_ARQUIVO = "logs/finance_pipeline.log"
+LOG_MAX_BYTES = 1_000_000
+LOG_BACKUP_COUNT = 3
+
 ANOS_SIMULACAO = 10
 SIMULACOES_MONTE_CARLO = 5000
 MONTE_CARLO_LOG_ATIVO = True
