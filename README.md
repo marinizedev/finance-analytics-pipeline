@@ -9,7 +9,7 @@ Simulador financeiro desenvolvido em Python para gerar cenários econômicos, si
 
 O projeto gera dados simulados de receitas, custos e caixa ao longo do tempo e permite explorar os resultados por meio de **análise exploratória em Jupyter Notebook**.
 
-> **Versão atual: 2.1.0 (03/09/2026).** Esta versão marca a evolução do motor para Programação Orientada a Objetos, testes automatizados e logging centralizado. O histórico técnico completo está em [CHANGELOG.md](CHANGELOG.md).
+> **Versão atual: 2.4.0 (07/09/2026).** Esta versão amplia a parametrização do modelo, removendo regras de negócio hardcoded do motor e centralizando novos parâmetros em `conf.py`. A evolução também inclui cobertura automatizada das novas regras configuráveis. O histórico técnico completo está em [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -41,6 +41,8 @@ Este projeto tem como objetivo demonstrar técnicas utilizadas em **análise de 
 - Geração automática de datasets
 - Análise exploratória de dados
 - Visualização de resultados
+- Testes automatizados de regras de negócio
+- Parametrização de cenários e comportamentos do modelo
 
 ---
 
@@ -51,13 +53,13 @@ O projeto foi estruturado com separação clara de responsabilidades para facili
 A lógica do sistema está dividida em três componentes principais:
 
 - **`conf.py`**
-    Arquivo responsável pelas **configurações e parâmetros do modelo**, incluindo taxas econômicas, probablidades, limites financeiros e cenários. Isso permite ajustar o comportamento da simulação sem modificar o motor do sistema.
+    Arquivo responsável pelas **configurações e parâmetros do modelo**, incluindo taxas econômicas, probabilidades, limites financeiros, faixas de variação, duração de crises e parâmetros da simulação Monte Carlo.
 - **`simulation_engine.py`**
-    Contém o **motor da simulação**, onde são implementadas as regras de negócio, geração de transações, eventos econômicos, cálculo de métricas e execução das simulações Monte Carlo.
+    Contém o **motor da simulação**, as regras de negócio, a geração de transações e eventos econômicos, a análise Monte Carlo e os componentes responsáveis pelo processamento e visualização dos resultados.
 - **`main.py`**
     Responsável pela **execução do pipeline**, chamando a simulação, gerando os datasets e exibindo os resultados.
 
-Essa separação permite que o modelo seja facilmente adaptado para diferentes cenários financeiros apenas modificando parâmetros no arquivo de configuração (`conf.py`).
+A separação entre configuração e lógica facilita a adaptação do modelo para diferentes cenários financeiros, permitindo ajustar grande parte dos parâmetros diretamente em `conf.py`, sem alterar o fluxo principal do motor.
 
 ## Evolução arquitetural — V2
 
@@ -70,9 +72,10 @@ Na V2, os elementos do negócio passaram a ter representação explícita:
 | `EstadoFinanceiro` | Mantém caixa, reserva, membros e histórico; aplica transações e usa a reserva quando necessário. |
 | `EstadoEconomico` | Representa inflação, crise e seus impactos no período. |
 | `Transacao` e `RegistroMensal` | Modelam movimentações e resultados mensais com tipos próprios. |
+| `ResultadoSimulacao` | Representa o resultado final da simulação e disponibiliza os dados para análise. |
 | `SimuladorFinanceiro` | Executa regras de negócio e produz um `ResultadoSimulacao`. |
 | `AnaliseMonteCarlo` | Executa cenários repetidos e calcula indicadores de risco. |
-| `GeradorGraficos` | Gera os gráficos sem misturar visualização com regras financeiras. |
+| `GeradorGraficos` | Isola a responsabilidade de visualização das regras financeiras do simulador. |
 
 Essa mudança preserva a interface de execução e os arquivos de saída da V1, mas deixa o projeto mais testável, previsível e preparado para novas regras. A utilização da reserva, antes existente como função isolada, também passou a integrar o fluxo real da simulação.
 
@@ -80,6 +83,10 @@ Essa mudança preserva a interface de execução e os arquivos de saída da V1, 
 
 - **V1:** funções e dicionários, com separação inicial entre configuração, motor e execução.
 - **V2:** domínio modelado por classes, responsabilidades isoladas, gerador aleatório injetável para reprodutibilidade e cobertura automatizada de regras críticas.
+- **V2.1:** logging centralizado com o módulo padrão `logging`, substituindo mensagens de execução com `print` e adicionando rotação de arquivos.
+- **V2.2:** regras financeiras foram descompactadas em métodos com nomes de domínio; o fator econômico voltou a ser explícito e o impacto de crise nos custos ganhou teste dedicado.
+- **V2.3:** configurações legadas e redundantes foram removidas para manter uma única fonte de verdade por regra financeira.
+- **V2.4:** novas regras de negócio foram parametrizadas em `conf.py`, incluindo comportamento mensal dos membros, custos imprevistos, duração de crises, inflação, fator econômico e percentis do Monte Carlo. A suíte de testes foi ampliada para validar essas configurações.
 - Cada mudança relevante deve ser registrada em [CHANGELOG.md](CHANGELOG.md), preservando a história técnica do projeto.
 
 ---
@@ -90,6 +97,10 @@ Essa mudança preserva a interface de execução e os arquivos de saída da V1, 
 - Pandas
 - Matplotlib
 - Jupyter Notebook
+- `unittest`
+- `logging`
+
+---
 
 ## Estrutura do projeto
 
@@ -152,29 +163,78 @@ O sistema irá:
 1. Rodar a simulação financeira
 2. Executar múltiplas simulações de Monte Carlo
 3. Gerar arquivos CSV na pasta `data`
-4. Exibir gráficos de análise
+4. Gerar gráficos de análise
 
 ## Testes automatizados
 
-A V2 utiliza a biblioteca padrão `unittest`, portanto não exige dependências adicionais. Para executar toda a suíte:
+A V2 utiliza a biblioteca padrão `unittest`, portanto não exige biblioteca adicional de testes além das dependências já necessárias ao projeto.
+
+Para executar toda a suíte:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Os testes cobrem regras essenciais do domínio: atualização de caixa por tipo de transação, uso de reserva, contenção de custos, eventos planejados, estrutura dos resultados, reprodutibilidade com semente aleatória e resultados da análise Monte Carlo.
+A suíte atual possui **15 testes automatizados**, cobrindo regras essenciais do domínio, incluindo:
+
+- atualização de caixa por tipo de transação;
+- uso da reserva financeira;
+- contenção de custos;
+- eventos planejados;
+- aplicação de impactos de crises;
+- estrutura dos resultados;
+- reprodutibilidade com semente aleatória;
+- logging em modo de depuração;
+- análise de Monte Carlo;
+- parametrização do crescimento e saída de membros;
+- parametrização de custos imprevistos;
+- parametrização da duração de crises;
+- parametrização do fator econômico.
+
+Os testes utilizam `patch` e geradores aleatórios controlados quando necessário para validar comportamentos determinísticos e garantir que as configurações centralizadas sejam efetivamente utilizadas pelo motor.
+
+---
 
 ## Logs
 
-As mensagens do pipeline utilizam o módulo padrão `logging` — não há mensagens de execução com `print`. Os logs são emitidos no terminal e salvos em `logs/finance_pipeline.log`, com rotação automática de arquivo para limitar o uso de disco.
+As mensagens do pipeline utilizam o módulo padrão `logging` — não há mensagens de execução com `print`.
+
+Os logs são emitidos no terminal e salvos em:
+`logs/finance_pipeline.log`
+
+O arquivo possui rotação automática para limitar o uso de disco.
 
 O nível e a retenção são configuráveis em `conf.py`:
 
 - `LOG_NIVEL`: nível mínimo registrado, como `INFO` ou `DEBUG`.
 - `LOG_ARQUIVO`: caminho do arquivo de log.
-- `LOG_MAX_BYTES` e `LOG_BACKUP_COUNT`: tamanho máximo e quantidade de arquivos rotacionados.
+- `LOG_MAX_BYTES`: tamanho máximo de cada arquivo de log.
+- `LOG_BACKUP_COUNT`: quantidade de arquivos rotacionados mantidos.
 
 O arquivo de log é ignorado pelo Git; assim, o repositório mantém a configuração versionada sem incluir saídas locais de execução.
+
+---
+
+## Parametrização do modelo
+
+As regras ajustáveis da simulação ficam centralizadas em `conf.py`, reduzindo a necessidade de modificar o motor para experimentar diferentes cenários.
+
+Entre os parâmetros configuráveis estão:
+
+- cenário econômico;
+- inflação anual;
+- crescimento médio das contribuições;
+- comportamento mensal dos membros;
+- probabilidades de eventos;
+- faixas de valores de eventos e custos imprevistos;
+- duração das crises econômicas;
+- impactos de crises sobre doações, membros e custos;
+- fator de contenção de custos;
+- fator de risco e volatilidade;
+- quantidade de simulações de Monte Carlo;
+- percentis utilizados na projeção probabilística.
+
+Essa abordagem permite alterar hipóteses do modelo preservando o fluxo principal da aplicação.
 
 ---
 
@@ -192,6 +252,7 @@ No notebook é possível:
 - Analisar estatísticas
 - Visualizar distribuições
 - Explorar cenários financeiros
+- Avaliar resultados das simulações
 
 ---
 
@@ -203,6 +264,7 @@ Algumas análises possíveis com os dados gerados:
 - Distribuição de resultados da simulação Monte Carlo
 - Análise de risco financeiro
 - Comparação entre cenários
+- Projeção probabilística do caixa
 
 ---
 

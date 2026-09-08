@@ -50,18 +50,12 @@ FATOR_CONTENCAO_CUSTOS = 0.8
 CONTRIBUICAO_MEDIA_INICIAL = 300
 DESVIO_CONTRIBUICAO = 20
 
-# Crescimento médio anual das contribuições
-CRESCIMENTO_CONTRIBUICAO_ANUAL = {
+# Crescimento médio anual da contribuição média por membro.
+# Este parâmetro é aplicado exclusivamente ao cálculo de dízimos.
+CRESCIMENTO_CONTRIBUICAO_MEDIA_ANUAL = {
     "pessimista": 0.03,
     "neutro": 0.04,
     "otimista": 0.05
-}
-
-# Crescimento médio anual das despesas
-CRESCIMENTO_DESPESAS_ANUAL = {
-    "pessimista": 0.02,
-    "neutro": 0.04,
-    "otimista": 0.08
 }
 
 # Cenário econômico atual utilizado na simulação
@@ -74,14 +68,11 @@ CENARIO_ATUAL = "neutro"
 MEMBROS_INICIAIS = 85
 MEMBROS_LIMITE = 300
 
-# Crescimento natural da comunidade
-TAXA_CRESCIMENTO_MEMBROS = 0.35
+# Faixa de crescimento mensal dos membros
+CRESCIMENTO_MENSAL_MEMBROS = (0.001, 0.004)
 
-# Probabilidade de membros deixarem a igreja
-PROB_SAIDA_MEMBRO = 0.04
-
-# Intervalo de impacto na saída de membros
-SAIDA_MEMBROS_INTERVALO = (0.90, 0.98)
+# Faixa de saída mensal dos membros
+SAIDA_MENSAL_MEMBROS = (0.001, 0.003)
 
 # Fidelidade média de contribuição
 TAXA_FIDELIDADE = (0.75, 0.9)
@@ -100,11 +91,20 @@ PROB_EVENTO_EXTRA = 0.05
 # Intervalo de impacto financeiro desses eventos
 VALOR_EVENTO_EXTRA = (300, 2000)
 
+# Probabilidade mensal de ocorrência de um custo imprevisto
+PROB_CUSTO_IMPREVISTO = 0.05
+
+# Faixa de valor de um custo imprevisto
+VALOR_CUSTO_IMPREVISTO = (800, 5000)
+
 # =========================================================
 # CRISE ECONÔMICA
 # =========================================================
 
 PROBABILIDADE_CRISE = 0.04
+
+# Duração mínima e máxima de uma crise econômica, em meses
+DURACAO_CRISE = (3, 12)
 
 # Impacto da crise nas doações
 IMPACTO_DOACAO_CRISE = (0.6, 0.85)
@@ -120,7 +120,28 @@ IMPACTO_CUSTOS_CRISE = (1.05, 1.25)
 # ==================================
 
 TAXA_INFLACAO_ANUAL = 0.045
+
+# Piso permitido para a inflação anual simulada
+TAXA_INFLACAO_MINIMA = -0.02
+
+# Desvio utilizado na geração da inflação anual
+DESVIO_INFLACAO_ANUAL = 0.01
+
 FATOR_RISCO_ECONOMICO = 1.0
+
+# Valor central do fator econômico
+FATOR_ECONOMICO_BASE = 1.0
+
+# Desvio utilizado na variação do fator econômico
+DESVIO_FATOR_ECONOMICO = 0.05
+
+# =========================================================
+# MONTE CARLO
+# =========================================================
+
+# Percentis utilizados para representar a faixa probabilística
+PERCENTIL_INFERIOR_MONTE_CARLO = 0.1
+PERCENTIL_SUPERIOR_MONTE_CARLO = 0.9
 
 # ==================================
 # PARÂMETROS DE VOLATILIDADE
@@ -161,7 +182,7 @@ DEZEMBRO = 12
 # =========================================================
 # media_base: valor médio esperado
 # desvio_base: variação natural
-# crescimento_anual: crescimento da categoria por cenário
+# crescimento_anual: crescimento da categoria por cenário (exceto dízimo)
 # tipo: entrada ou saída
 # aplica_sazonal: se sofre impacto da sazonalidade mensal
 
@@ -169,11 +190,6 @@ CONFIG_VALORES = {
     "dizimo": {
         "media_base": 6000,
         "desvio_base": 2000,
-        "crescimento_anual":{
-        "pessimista": 0.02,
-        "neutro": 0.05,
-        "otimista": 0.08,
-        },
         "tipo": "entrada",
         "aplica_sazonal": True
     },
